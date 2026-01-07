@@ -80,6 +80,12 @@ body {
   margin-bottom: 36px;
 }
 
+@media (min-width: 960px) {
+  .hero {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.6fr);
+  }
+}
+
 .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.16em;
@@ -93,6 +99,14 @@ h1 {
   font-family: "Noto Serif JP", "Libre Bodoni", serif;
   font-size: clamp(32px, 5vw, 58px);
   margin: 0 0 12px;
+}
+
+.hero-title {
+  text-wrap: balance;
+}
+
+.hero-title .title-line {
+  display: block;
 }
 
 .sub {
