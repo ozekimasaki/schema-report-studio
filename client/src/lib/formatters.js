@@ -93,13 +93,9 @@ export function formatFieldsText(nodes, labels) {
       const lines = section.entries.map(
         (entry) => `${entry.key}: ${entry.value || copyLabels.emptyValue}`
       );
-      return `${section.title}
-${lines.join("
-")}`;
+      return `${section.title}\n${lines.join("\n")}`;
     })
-    .join("
-
-");
+    .join("\n\n");
 }
 
 function formatDisplayValue(value, labels) {
