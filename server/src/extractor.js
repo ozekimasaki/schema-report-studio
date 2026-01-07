@@ -1,3 +1,5 @@
+import { parseHTML } from "linkedom";
+
 export const LIMITS = {
   maxUrls: 200,
   concurrency: 5,
@@ -20,6 +22,8 @@ export function buildEmptyResult(url, message) {
     ok: false,
     title: "",
     nodes: [],
+    microdata: [],
+    rdfa: [],
     typeCounts: {},
     sampleField: "",
     errors: [message],
@@ -114,6 +118,8 @@ export async function extractFromUrl(url, timeoutMs) {
     ok: true,
     title: "",
     nodes: [],
+    microdata: [],
+    rdfa: [],
     typeCounts: {},
     sampleField: "",
     errors: [],
@@ -144,10 +150,156 @@ export async function extractFromUrl(url, timeoutMs) {
     }
   }
 
+  try {
+    result.microdata = extractMicrodata(html);
+  } catch {
+    result.errors.push("Microdataの解析に失敗しました。");
+  }
+
+  try {
+    result.rdfa = extractRdfa(html);
+  } catch {
+    result.errors.push("RDFaの解析に失敗しました。");
+  }
+
   result.typeCounts = summarize(result.nodes);
   result.sampleField = buildSampleField(result.nodes[0]);
   result.timeMs = Date.now() - startedAt;
   return result;
+}
+
+function extractMicrodata(html) {
+  const { document } = parseHTML(html);
+  const itemElements = Array.from(document.querySelectorAll("[itemscope]"))
+    .filter((el) => !el.parentElement?.closest("[itemscope]"));
+  return itemElements.map((el) => parseMicrodataItem(el, document));
+}
+
+function parseMicrodataItem(itemEl, document) {
+  const itemtype = splitAttr(itemEl.getAttribute("itemtype"));
+  const itemid = itemEl.getAttribute("itemid") || "";
+  const properties = {};
+
+  const containers = [itemEl];
+  const itemref = splitAttr(itemEl.getAttribute("itemref"));
+  for (const ref of itemref) {
+    const refEl = document.getElementById(ref);
+    if (refEl) containers.push(refEl);
+  }
+
+  for (const container of containers) {
+    collectMicrodataProperties(container, itemEl, properties, document);
+  }
+
+  return { itemtype, itemid, properties };
+}
+
+function collectMicrodataProperties(container, rootItem, properties, document) {
+  const stack = [container];
+  while (stack.length) {
+    const el = stack.pop();
+    if (!el || el === rootItem) {
+      stack.push(...Array.from(el?.children || []));
+      continue;
+    }
+
+    const isItemScope = el.hasAttribute("itemscope");
+    const hasItemProp = el.hasAttribute("itemprop");
+
+    if (isItemScope && !hasItemProp) {
+      continue;
+    }
+
+    if (hasItemProp) {
+      const propNames = splitAttr(el.getAttribute("itemprop"));
+      const value = isItemScope
+        ? parseMicrodataItem(el, document)
+        : extractMicrodataValue(el);
+      for (const name of propNames) {
+        if (!properties[name]) properties[name] = [];
+        properties[name].push(value);
+      }
+      if (isItemScope) {
+        continue;
+      }
+    }
+
+    stack.push(...Array.from(el.children));
+  }
+}
+
+function extractMicrodataValue(el) {
+  const tag = el.tagName?.toLowerCase?.() || "";
+  if (tag === "meta") return el.getAttribute("content") || "";
+  if (["audio", "video", "track", "source", "img", "iframe", "embed"].includes(tag)) {
+    return el.getAttribute("src") || "";
+  }
+  if (["a", "area", "link"].includes(tag)) {
+    return el.getAttribute("href") || "";
+  }
+  if (tag === "object") {
+    return el.getAttribute("data") || "";
+  }
+  if (tag === "time") {
+    return el.getAttribute("datetime") || el.textContent?.trim() || "";
+  }
+  return el.textContent?.trim() || "";
+}
+
+function extractRdfa(html) {
+  const { document } = parseHTML(html);
+  const nodes = Array.from(document.querySelectorAll("[property], [typeof]"));
+  const entries = [];
+  for (const el of nodes) {
+    const properties = {};
+    const propNames = splitAttr(el.getAttribute("property"));
+    const typeofList = splitAttr(el.getAttribute("typeof"));
+    const subject =
+      el.getAttribute("about") ||
+      el.getAttribute("resource") ||
+      el.getAttribute("href") ||
+      el.getAttribute("src") ||
+      (el.getAttribute("id") ? `#${el.getAttribute("id")}` : "");
+    const vocab = el.getAttribute("vocab") || "";
+    const prefix = el.getAttribute("prefix") || "";
+
+    if (propNames.length > 0) {
+      const value = extractRdfaValue(el);
+      for (const name of propNames) {
+        if (!properties[name]) properties[name] = [];
+        properties[name].push(value);
+      }
+    }
+
+    if (typeofList.length === 0 && propNames.length === 0) continue;
+
+    entries.push({
+      subject,
+      typeof: typeofList,
+      vocab,
+      prefix,
+      properties,
+    });
+  }
+  return entries;
+}
+
+function extractRdfaValue(el) {
+  return (
+    el.getAttribute("content") ||
+    el.getAttribute("resource") ||
+    el.getAttribute("href") ||
+    el.getAttribute("src") ||
+    el.textContent?.trim() ||
+    ""
+  );
+}
+
+function splitAttr(value) {
+  return String(value || "")
+    .split(/\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
 }
 
 export async function mapWithConcurrency(items, limit, mapper) {

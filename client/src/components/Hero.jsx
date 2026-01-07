@@ -4,7 +4,7 @@ export default function Hero({ input, stats }) {
   return (
     <header className="hero">
       <div>
-        <p className="eyebrow">構造化データチェック</p>
+        <p className="eyebrow">Schema Report Studio</p>
         <h1>構造化データをやさしく整理して、見やすいレポートに。</h1>
         <p className="sub">
           URLを貼り付けるだけで構造化データを抽出し、HTMLまたはPDFで出力できます。

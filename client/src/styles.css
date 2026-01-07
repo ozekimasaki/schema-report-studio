@@ -334,6 +334,13 @@ td:nth-child(5) {
   line-height: 1.4;
 }
 
+.field-preview-meta {
+  display: grid;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
 .field-preview-hint {
   font-size: 11px;
   color: var(--muted);
@@ -415,6 +422,29 @@ td:nth-child(5) {
 .row-details-inner {
   display: grid;
   gap: 12px;
+}
+
+.data-tabs {
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tab {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--muted);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border 0.2s ease;
+}
+
+.tab.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
 }
 
 .raw-details summary {
@@ -642,6 +672,15 @@ pre {
 
   .field-row {
     grid-template-columns: 100px 1fr;
+  }
+
+  .data-tabs {
+    width: 100%;
+  }
+
+  .tab {
+    flex: 1;
+    text-align: center;
   }
 
   .toggle-detail {

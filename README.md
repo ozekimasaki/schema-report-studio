@@ -56,6 +56,6 @@ wrangler deploy
 3. テンプレートを選択して、JSON/CSV/HTML/PDFで出力
 
 ## 補足
-- JSON-LDのみ対応（Microdata/RDFaは未対応）
+- JSON-LD / Microdata / RDFa に対応
 - PDFはブラウザの印刷ダイアログから保存
 - 1回のリクエスト上限: 200 URL

@@ -1,6 +1,8 @@
 export const EXAMPLE_URLS = [
   "https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data?hl=ja",
   "https://schema.org/docs/gs.html",
+  "https://rdfa.info/play/",
+  "https://validator.schema.org/",
 ].join("\n");
 
 export const THEME_OPTIONS = [
