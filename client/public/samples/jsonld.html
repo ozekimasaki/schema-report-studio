@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JSON-LD Sample</title>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Schema Report Studio",
+        "url": "https://structured.maymai.dev/",
+        "email": "hello@maymai.dev",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "1-2-3 Sample Street",
+          "addressLocality": "Tokyo",
+          "postalCode": "100-0001",
+          "addressCountry": "JP"
+        }
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Ozeki Masaki",
+        "jobTitle": "Product Designer",
+        "worksFor": {
+          "@type": "Organization",
+          "name": "Maymai Studio"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <h1>JSON-LD Sample</h1>
+    <p>Sample JSON-LD markup for testing extraction.</p>
+  </body>
+</html>

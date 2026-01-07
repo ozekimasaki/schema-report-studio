@@ -26,6 +26,15 @@ app.post("/api/extract", async (c) => {
     return c.json({ error: "URLが指定されていません。" }, 400);
   }
 
+  const originHost = new URL(c.req.url).host;
+  const fetcher = (url, init) => {
+    const target = new URL(url);
+    if (target.host === originHost) {
+      return c.env.ASSETS.fetch(new Request(url, init));
+    }
+    return fetch(url, init);
+  };
+
   const results = await mapWithConcurrency(
     entries,
     LIMITS.concurrency,
@@ -33,7 +42,10 @@ app.post("/api/extract", async (c) => {
       if (!entry.url) {
         return buildEmptyResult(entry.input, "無効なURLです。");
       }
-      return extractFromUrl(entry.url, LIMITS.timeoutMs);
+      return extractFromUrl(entry.url, {
+        timeoutMs: LIMITS.timeoutMs,
+        fetcher,
+      });
     }
   );
 

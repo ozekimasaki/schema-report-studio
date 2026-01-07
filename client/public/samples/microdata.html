@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Microdata Sample</title>
+  </head>
+  <body>
+    <h1>Microdata Sample</h1>
+
+    <div itemscope itemtype="https://schema.org/Organization">
+      <span itemprop="name">Schema Report Studio</span>
+      <a itemprop="url" href="https://structured.maymai.dev/">https://structured.maymai.dev/</a>
+      <span itemprop="email">hello@maymai.dev</span>
+      <div itemprop="address" itemscope itemtype="https://schema.org/PostalAddress">
+        <span itemprop="streetAddress">1-2-3 Sample Street</span>
+        <span itemprop="addressLocality">Tokyo</span>
+        <span itemprop="postalCode">100-0001</span>
+        <span itemprop="addressCountry">JP</span>
+      </div>
+    </div>
+
+    <div itemscope itemtype="https://schema.org/Person">
+      <span itemprop="name">Ozeki Masaki</span>
+      <span itemprop="jobTitle">Product Designer</span>
+      <a itemprop="url" href="https://structured.maymai.dev/">Profile</a>
+      <span itemprop="worksFor" itemscope itemtype="https://schema.org/Organization">
+        <span itemprop="name">Maymai Studio</span>
+      </span>
+    </div>
+  </body>
+</html>

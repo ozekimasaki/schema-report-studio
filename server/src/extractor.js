@@ -76,11 +76,11 @@ function summarize(nodes) {
   return typeCounts;
 }
 
-async function fetchHtml(url, timeoutMs) {
+async function fetchHtml(url, timeoutMs, fetcher = fetch) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(url, {
+    const res = await fetcher(url, {
       signal: controller.signal,
       headers: {
         "user-agent": "StructuredDataReportBot/1.0",
@@ -111,7 +111,8 @@ function buildSampleField(node) {
   );
 }
 
-export async function extractFromUrl(url, timeoutMs) {
+export async function extractFromUrl(url, options = {}) {
+  const { timeoutMs = LIMITS.timeoutMs, fetcher } = options;
   const startedAt = Date.now();
   const result = {
     url,
@@ -126,7 +127,7 @@ export async function extractFromUrl(url, timeoutMs) {
     timeMs: 0,
   };
 
-  const { ok, html, error } = await fetchHtml(url, timeoutMs);
+  const { ok, html, error } = await fetchHtml(url, timeoutMs, fetcher);
   if (!ok) {
     result.ok = false;
     result.errors.push(error || "取得に失敗しました。");
