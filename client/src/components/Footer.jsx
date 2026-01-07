@@ -11,7 +11,10 @@ export default function Footer({ copy, githubUrl }) {
         </a>
       </div>
       <div className="footer-copy">
-        (c) {new Date().getFullYear()} {copy.footer.copyrightName}
+        (c) {new Date().getFullYear()}{" "}
+        <a href={githubUrl} target="_blank" rel="noreferrer">
+          {copy.footer.copyrightName}
+        </a>
       </div>
     </footer>
   );
