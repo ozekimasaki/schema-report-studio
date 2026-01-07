@@ -1,62 +1,61 @@
 # Schema Report Studio
 
-Batch extract JSON-LD from URLs and export a client-ready report (HTML or PDF via print).
+URLからJSON-LD（構造化データ）を一括抽出し、クライアント向けレポート（HTML/PDF/CSV/JSON）として出力するツールです。
 
-## Stack
+## 技術スタック
 - Client: Vite 7 + React
 - Server: Hono (Node)
-- Worker: Cloudflare Workers (static assets + API)
+- Worker: Cloudflare Workers（静的配信 + API）
 
-## Setup
+## セットアップ（ローカル）
+ターミナルを2つ使います。
 
-Open two terminals.
-
-### Server
+### Server（Node）
 ```
 cd server
 npm install
 npm run dev
 ```
 
-### Client
+### Client（Vite）
 ```
 cd client
 npm install
 npm run dev
 ```
 
-Client runs on http://localhost:5173
-Server runs on http://localhost:8787
+Client: http://localhost:5173  
+Server: http://localhost:8787
 
-## Cloudflare Workers (static + API)
-1. Build the client:
+## Cloudflare Workers（静的 + API）
+1. Clientをビルド
 ```
 cd client
 npm install
 npm run build
 ```
-2. Run Workers locally:
+2. Workersをローカル実行
 ```
 cd ../server
 npm install
 wrangler dev
 ```
-3. Deploy:
+3. デプロイ
 ```
 wrangler deploy
 ```
 
-## Worker config
-- Config file: `server/wrangler.jsonc`
-- Worker entry: `server/src/worker.js`
-- Assets directory: `client/dist`
+### Worker設定
+- 設定ファイル: `server/wrangler.jsonc`
+- エントリ: `server/src/worker.js`
+- 静的ファイル: `client/dist`
 
-## Usage
-1. Paste URLs (one per line).
-2. Click "Extract structured data".
-3. Choose a report template, then export JSON/CSV/HTML or "Export PDF" (opens print dialog).
+## 使い方
+1. URLを1行ずつ入力
+2. 「構造化データを抽出」をクリック
+3. テンプレートを選択して、JSON/CSV/HTML/PDFで出力
 
-## Notes
-- JSON-LD only (microdata and RDFa are not parsed).
-- For PDF, use the Print dialog and choose "Save as PDF".
-- Default limit: 200 URLs per request.
+## 補足
+- JSON-LDのみ対応（Microdata/RDFaは未対応）
+- PDFはブラウザの印刷ダイアログから保存
+- 1回のリクエスト上限: 200 URL
