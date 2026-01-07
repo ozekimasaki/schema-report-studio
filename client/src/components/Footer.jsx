@@ -5,11 +5,6 @@ export default function Footer({ copy, githubUrl }) {
       <div className="footer-note">
         {copy.footer.note}
       </div>
-      <div className="footer-links">
-        <a href={githubUrl} target="_blank" rel="noreferrer">
-          {copy.footer.githubLabel}
-        </a>
-      </div>
       <div className="footer-copy">
         (c) {new Date().getFullYear()}{" "}
         <a href={githubUrl} target="_blank" rel="noreferrer">
