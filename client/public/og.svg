@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Structured Data Check">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#f5f1ea"/>
+      <stop offset="100%" stop-color="#f0e3d2"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.78" cy="0.2" r="0.6">
+      <stop offset="0%" stop-color="#e26d5a" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#e26d5a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="accent" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0%" stop-color="#1f4b47"/>
+      <stop offset="100%" stop-color="#0f3d91"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <rect x="80" y="90" width="1040" height="450" rx="32" fill="#ffffff" stroke="#1f2a2b" stroke-opacity="0.08"/>
+  <rect x="110" y="140" width="540" height="20" rx="10" fill="#1f4b47" opacity="0.18"/>
+  <rect x="110" y="180" width="420" height="16" rx="8" fill="#1f4b47" opacity="0.14"/>
+
+  <text x="110" y="285" font-size="54" font-weight="700" fill="#1f2a2b" font-family="Noto Sans JP, Public Sans, Arial, sans-serif">
+    Structured Data Check
+  </text>
+  <text x="110" y="340" font-size="30" fill="#5f6b6f" font-family="Noto Sans JP, Public Sans, Arial, sans-serif">
+    Review and report JSON-LD with confidence.
+  </text>
+
+  <g transform="translate(760 170)">
+    <rect x="0" y="0" width="320" height="260" rx="20" fill="#fdfcf9" stroke="#1f2a2b" stroke-opacity="0.08"/>
+    <rect x="24" y="28" width="180" height="10" rx="5" fill="#1f2a2b" opacity="0.2"/>
+    <rect x="24" y="54" width="220" height="10" rx="5" fill="#1f2a2b" opacity="0.14"/>
+    <rect x="24" y="86" width="140" height="10" rx="5" fill="#1f2a2b" opacity="0.12"/>
+    <rect x="24" y="118" width="230" height="10" rx="5" fill="#1f2a2b" opacity="0.1"/>
+    <rect x="24" y="150" width="190" height="10" rx="5" fill="#1f2a2b" opacity="0.1"/>
+    <circle cx="274" cy="210" r="40" fill="url(#accent)" opacity="0.18"/>
+    <path d="M252 210 L270 228 L302 194" fill="none" stroke="#1f4b47" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
