@@ -66,12 +66,22 @@ function typeList(node) {
   return Array.isArray(t) ? t : [t];
 }
 
-function summarize(nodes) {
+function addTypeCounts(typeCounts, types) {
+  for (const t of types) {
+    typeCounts[t] = (typeCounts[t] || 0) + 1;
+  }
+}
+
+function summarizeAll(nodes, microdata, rdfa) {
   const typeCounts = {};
   for (const node of nodes) {
-    for (const t of typeList(node)) {
-      typeCounts[t] = (typeCounts[t] || 0) + 1;
-    }
+    addTypeCounts(typeCounts, typeList(node));
+  }
+  for (const item of microdata) {
+    addTypeCounts(typeCounts, Array.isArray(item.itemtype) ? item.itemtype : []);
+  }
+  for (const item of rdfa) {
+    addTypeCounts(typeCounts, Array.isArray(item.typeof) ? item.typeof : []);
   }
   return typeCounts;
 }
@@ -168,7 +178,7 @@ export async function extractFromUrl(url, options = {}) {
     result.errors.push("構造化データが見つかりませんでした。");
   }
 
-  result.typeCounts = summarize(result.nodes);
+  result.typeCounts = summarizeAll(result.nodes, result.microdata, result.rdfa);
   result.sampleField = buildSampleField(result.nodes[0]);
   result.timeMs = Date.now() - startedAt;
   return result;
