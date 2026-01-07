@@ -137,9 +137,6 @@ export async function extractFromUrl(url, options = {}) {
 
   result.title = extractTitle(html);
   const scripts = extractJsonLd(html);
-  if (scripts.length === 0) {
-    result.errors.push("JSON-LDが見つかりませんでした。");
-  }
 
   for (const raw of scripts) {
     const cleaned = cleanJson(raw);
@@ -161,6 +158,14 @@ export async function extractFromUrl(url, options = {}) {
     result.rdfa = extractRdfa(html);
   } catch {
     result.errors.push("RDFaの解析に失敗しました。");
+  }
+
+  if (
+    result.nodes.length === 0 &&
+    result.microdata.length === 0 &&
+    result.rdfa.length === 0
+  ) {
+    result.errors.push("構造化データが見つかりませんでした。");
   }
 
   result.typeCounts = summarize(result.nodes);
