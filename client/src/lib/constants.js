@@ -1,6 +1,7 @@
 export const EXAMPLE_URLS = [
-  "https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data?hl=ja",
-  "https://schema.org/docs/gs.html",
+  "https://structured.maymai.dev/samples/jsonld.html",
+  "https://structured.maymai.dev/samples/microdata.html",
+  "https://structured.maymai.dev/samples/rdfa.html",
 ].join("\n");
 
 export const THEME_OPTIONS = [

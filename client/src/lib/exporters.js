@@ -1,5 +1,21 @@
 import { LABELS } from "./constants.js";
-import { formatFieldsText } from "./formatters.js";
+import {
+  buildMicrodataSections,
+  buildRdfaSections,
+  formatFieldsText,
+} from "./formatters.js";
+
+function formatSectionsText(sections) {
+  if (!sections.length) return "";
+  return sections
+    .map((section) => {
+      const lines = section.entries.map(
+        (entry) => `${entry.key}: ${entry.value || LABELS.emptyValue}`
+      );
+      return `${section.title}\n${lines.join("\n")}`;
+    })
+    .join("\n\n");
+}
 
 export function createCsv(results) {
   const headers = [
@@ -7,6 +23,8 @@ export function createCsv(results) {
     "URL",
     "タイプ",
     "項目一覧",
+    "Microdata",
+    "RDFa",
     "警告",
     "ステータス",
     "処理時間(ms)",
@@ -20,6 +38,8 @@ export function createCsv(results) {
       row.url || "",
       types,
       formatFieldsText(row.nodes),
+      formatSectionsText(buildMicrodataSections(row.microdata)),
+      formatSectionsText(buildRdfaSections(row.rdfa)),
       warnings,
       row.ok ? "OK" : LABELS.statusError,
       String(row.timeMs || 0),

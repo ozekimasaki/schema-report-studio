@@ -1,5 +1,9 @@
 import { LABELS } from "./constants.js";
-import { buildFieldSections } from "./formatters.js";
+import {
+  buildFieldSections,
+  buildMicrodataSections,
+  buildRdfaSections,
+} from "./formatters.js";
 
 function escapeHtml(value) {
   return String(value || "")
@@ -10,7 +14,43 @@ function escapeHtml(value) {
     .replace(/'/g, "&#039;");
 }
 
-function renderFieldSectionsHtml(nodes) {
+function renderSectionsHtml(sections, title) {
+  if (sections.length === 0) return "";
+  const sectionHtml = `<div class="field-preview">
+${sections
+  .map(
+    (section) => `<div class="field-section">
+<div class="field-title">${escapeHtml(section.title)}</div>
+${section.entries
+  .map(
+    (entry) => `<div class="field-row">
+<span class="field-key">${escapeHtml(entry.key)}</span>
+<span class="field-value">${escapeHtml(
+      entry.value || LABELS.emptyValue
+    )}</span>
+</div>`
+  )
+  .join("")}
+</div>`
+  )
+  .join("")}
+</div>`;
+  return `<div class="field-block">
+<div class="field-block-title">${escapeHtml(title)}</div>
+${sectionHtml}
+</div>`;
+}
+
+function renderFieldSectionsHtml(row) {
+  const blocks = [
+    renderSectionsHtml(buildFieldSections(row.nodes), "JSON-LD"),
+    renderSectionsHtml(buildMicrodataSections(row.microdata), "Microdata"),
+    renderSectionsHtml(buildRdfaSections(row.rdfa), "RDFa"),
+  ].filter(Boolean);
+  return blocks.join("");
+}
+
+function renderFieldSectionsHtmlLegacy(nodes) {
   const sections = buildFieldSections(nodes);
   if (sections.length === 0) return "";
   return `<div class="field-preview">
@@ -63,7 +103,7 @@ export function createReportHtml(results, generatedAt, theme) {
     .map((r) => {
       const types = Object.keys(r.typeCounts || {}).join(", ") || LABELS.empty;
       const warnings = (r.errors || []).join(" | ") || LABELS.ok;
-      const fieldsHtml = renderFieldSectionsHtml(r.nodes);
+      const fieldsHtml = renderFieldSectionsHtml(r) || renderFieldSectionsHtmlLegacy(r.nodes);
       return `
         <tr>
           <td>${escapeHtml(r.title || LABELS.noTitle)}</td>
@@ -99,6 +139,8 @@ export function createReportHtml(results, generatedAt, theme) {
   .field-value { color: var(--muted); word-break: break-word; white-space: pre-wrap; }
   .field-preview-text { font-size: 12px; color: var(--ink); }
   .field-preview-hint { font-size: 11px; color: var(--muted); }
+  .field-block { margin-bottom: 12px; }
+  .field-block-title { font-size: 12px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
   a { color: var(--accent); text-decoration: none; }
   @media print { body { margin: 10mm; } }
 </style>

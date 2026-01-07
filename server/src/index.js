@@ -38,7 +38,7 @@ app.post("/api/extract", async (c) => {
       if (!entry.url) {
         return buildEmptyResult(entry.input, "無効なURLです。");
       }
-      return extractFromUrl(entry.url, LIMITS.timeoutMs);
+      return extractFromUrl(entry.url, { timeoutMs: LIMITS.timeoutMs });
     }
   );
 

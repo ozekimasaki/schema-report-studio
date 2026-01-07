@@ -73,6 +73,14 @@ export default function ReportPanel({
           <strong>{stats.withJsonLd}</strong>
         </div>
         <div>
+          <span>Microdataあり</span>
+          <strong>{stats.withMicrodata}</strong>
+        </div>
+        <div>
+          <span>RDFaあり</span>
+          <strong>{stats.withRdfa}</strong>
+        </div>
+        <div>
           <span>警告</span>
           <strong>{stats.errors}</strong>
         </div>

@@ -1,20 +1,46 @@
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { LABELS } from "../lib/constants.js";
-import { summarizeFieldKeys, buildFieldSections } from "../lib/formatters.js";
+import {
+  buildFieldSections,
+  buildMicrodataSections,
+  buildRdfaSections,
+  summarizeFieldKeys,
+  summarizeMicrodataKeys,
+  summarizeRdfaKeys,
+} from "../lib/formatters.js";
 
-function FieldPreview({ nodes }) {
-  const sections = buildFieldSections(nodes);
-  if (sections.length === 0) return <span>{LABELS.empty}</span>;
+function FieldPreview({ jsonLd, microdata, rdfa }) {
+  const jsonLdCount = Array.isArray(jsonLd) ? jsonLd.length : 0;
+  const microdataCount = Array.isArray(microdata) ? microdata.length : 0;
+  const rdfaCount = Array.isArray(rdfa) ? rdfa.length : 0;
+  const hasAny = jsonLdCount + microdataCount + rdfaCount > 0;
+  if (!hasAny) return <span>{LABELS.empty}</span>;
+  const meta = [];
+  if (jsonLdCount) {
+    meta.push(`JSON-LD: ${summarizeFieldKeys(jsonLd)}`);
+  }
+  if (microdataCount) {
+    meta.push(`Microdata: ${summarizeMicrodataKeys(microdata)}`);
+  }
+  if (rdfaCount) {
+    meta.push(`RDFa: ${summarizeRdfaKeys(rdfa)}`);
+  }
   return (
     <div className="field-preview">
-      <div className="field-preview-text">{summarizeFieldKeys(nodes)}</div>
+      <div className="field-preview-text">
+        JSON-LD {jsonLdCount} / Microdata {microdataCount} / RDFa {rdfaCount}
+      </div>
+      <div className="field-preview-meta">
+        {meta.map((item) => (
+          <span key={item}>{item}</span>
+        ))}
+      </div>
       <span className="field-preview-hint">行クリックで詳細</span>
     </div>
   );
 }
 
-function FieldDetails({ nodes }) {
-  const sections = buildFieldSections(nodes);
+function SectionList({ sections }) {
   if (sections.length === 0) return <div>{LABELS.empty}</div>;
   return (
     <div className="field-details">
@@ -43,6 +69,12 @@ function FieldDetails({ nodes }) {
 }
 
 export default function ResultsTable({ results, expandedRows, onToggleRow }) {
+  const [tabByRow, setTabByRow] = useState({});
+
+  function setActiveTab(rowKey, tab) {
+    setTabByRow((prev) => ({ ...prev, [rowKey]: tab }));
+  }
+
   return (
     <div className="table-wrap">
       <table>
@@ -64,6 +96,7 @@ export default function ResultsTable({ results, expandedRows, onToggleRow }) {
               : LABELS.ok;
             const rowKey = `${row.url}-${index}`;
             const isExpanded = Boolean(expandedRows[rowKey]);
+            const activeTab = tabByRow[rowKey] || "jsonld";
             return (
               <Fragment key={rowKey}>
                 <tr
@@ -83,7 +116,11 @@ export default function ResultsTable({ results, expandedRows, onToggleRow }) {
                   </td>
                   <td data-label="タイプ">{types}</td>
                   <td data-label="項目一覧">
-                    <FieldPreview nodes={row.nodes} />
+                    <FieldPreview
+                      jsonLd={row.nodes}
+                      microdata={row.microdata}
+                      rdfa={row.rdfa}
+                    />
                   </td>
                   <td data-label="警告">
                     <span
@@ -100,11 +137,54 @@ export default function ResultsTable({ results, expandedRows, onToggleRow }) {
                   <tr className="row-details">
                     <td colSpan={5}>
                       <div className="row-details-inner">
-                        <FieldDetails nodes={row.nodes} />
-                        {row.nodes?.length ? (
+                        <div className="data-tabs" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            className={activeTab === "jsonld" ? "tab active" : "tab"}
+                            onClick={() => setActiveTab(rowKey, "jsonld")}
+                          >
+                            JSON-LD
+                          </button>
+                          <button
+                            type="button"
+                            className={activeTab === "microdata" ? "tab active" : "tab"}
+                            onClick={() => setActiveTab(rowKey, "microdata")}
+                          >
+                            Microdata
+                          </button>
+                          <button
+                            type="button"
+                            className={activeTab === "rdfa" ? "tab active" : "tab"}
+                            onClick={() => setActiveTab(rowKey, "rdfa")}
+                          >
+                            RDFa
+                          </button>
+                        </div>
+                        {activeTab === "jsonld" ? (
+                          <SectionList sections={buildFieldSections(row.nodes)} />
+                        ) : null}
+                        {activeTab === "microdata" ? (
+                          <SectionList sections={buildMicrodataSections(row.microdata)} />
+                        ) : null}
+                        {activeTab === "rdfa" ? (
+                          <SectionList sections={buildRdfaSections(row.rdfa)} />
+                        ) : null}
+                        {activeTab === "jsonld" && row.nodes?.length ? (
                           <details className="raw-details">
                             <summary>JSON-LD生データ</summary>
                             <pre>{JSON.stringify(row.nodes, null, 2)}</pre>
+                          </details>
+                        ) : null}
+                        {activeTab === "microdata" && row.microdata?.length ? (
+                          <details className="raw-details">
+                            <summary>Microdata生データ</summary>
+                            <pre>{JSON.stringify(row.microdata, null, 2)}</pre>
+                          </details>
+                        ) : null}
+                        {activeTab === "rdfa" && row.rdfa?.length ? (
+                          <details className="raw-details">
+                            <summary>RDFa生データ</summary>
+                            <pre>{JSON.stringify(row.rdfa, null, 2)}</pre>
                           </details>
                         ) : null}
                       </div>
