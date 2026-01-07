@@ -63,6 +63,12 @@ body {
   position: relative;
 }
 
+.page-top {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
 .page::before {
   content: "";
   position: absolute;
@@ -492,6 +498,16 @@ td:nth-child(5) {
   max-width: 540px;
 }
 
+.footer-links a {
+  font-size: 13px;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.footer-links a:hover {
+  text-decoration: underline;
+}
+
 .footer-copy {
   font-size: 12px;
   color: var(--muted);
@@ -551,6 +567,10 @@ pre {
 @media (max-width: 720px) {
   .page {
     padding: 28px 16px 64px;
+  }
+
+  .page-top {
+    justify-content: flex-start;
   }
 
   h1 {

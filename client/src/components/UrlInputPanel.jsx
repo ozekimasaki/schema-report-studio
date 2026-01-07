@@ -8,31 +8,34 @@ export default function UrlInputPanel({
   onUseExample,
   onClear,
   onExtract,
+  copy,
 }) {
   return (
     <section className="panel">
       <div className="panel-head">
-        <h2>URL入力</h2>
+        <h2>{copy.urlPanel.title}</h2>
         <div className="panel-actions">
           <button className="ghost" onClick={onUseExample}>
-            サンプルを使う
+            {copy.urlPanel.useSample}
           </button>
           <button className="ghost" onClick={onClear}>
-            クリア
+            {copy.urlPanel.clear}
           </button>
         </div>
       </div>
       <textarea
         value={input}
         onChange={(e) => onInputChange(e.target.value)}
-        placeholder="1行に1URLを入力"
+        placeholder={copy.urlPanel.placeholder}
         rows={7}
       />
       <div className="panel-footer">
         <button className="primary" onClick={onExtract} disabled={loading}>
-          {loading ? "抽出中..." : "構造化データを抽出"}
+          {loading ? copy.urlPanel.extracting : copy.urlPanel.extract}
         </button>
-        <span className="hint">最大{LIMITS.maxUrls}件まで</span>
+        <span className="hint">
+          {copy.urlPanel.max.replace("{count}", LIMITS.maxUrls)}
+        </span>
         {error ? <span className="error">{error}</span> : null}
       </div>
     </section>

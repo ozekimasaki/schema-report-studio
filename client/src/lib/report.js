@@ -1,4 +1,4 @@
-import { LABELS } from "./constants.js";
+import { getCopy } from "./i18n.js";
 import {
   buildFieldSections,
   buildMicrodataSections,
@@ -14,7 +14,7 @@ function escapeHtml(value) {
     .replace(/'/g, "&#039;");
 }
 
-function renderSectionsHtml(sections, title) {
+function renderSectionsHtml(sections, title, labels) {
   if (sections.length === 0) return "";
   const sectionHtml = `<div class="field-preview">
 ${sections
@@ -26,7 +26,7 @@ ${section.entries
     (entry) => `<div class="field-row">
 <span class="field-key">${escapeHtml(entry.key)}</span>
 <span class="field-value">${escapeHtml(
-      entry.value || LABELS.emptyValue
+      entry.value || labels.emptyValue
     )}</span>
 </div>`
   )
@@ -41,16 +41,16 @@ ${sectionHtml}
 </div>`;
 }
 
-function renderFieldSectionsHtml(row) {
+function renderFieldSectionsHtml(row, labels) {
   const blocks = [
-    renderSectionsHtml(buildFieldSections(row.nodes), "JSON-LD"),
-    renderSectionsHtml(buildMicrodataSections(row.microdata), "Microdata"),
-    renderSectionsHtml(buildRdfaSections(row.rdfa), "RDFa"),
+    renderSectionsHtml(buildFieldSections(row.nodes), "JSON-LD", labels),
+    renderSectionsHtml(buildMicrodataSections(row.microdata, labels), "Microdata", labels),
+    renderSectionsHtml(buildRdfaSections(row.rdfa, labels), "RDFa", labels),
   ].filter(Boolean);
   return blocks.join("");
 }
 
-function renderFieldSectionsHtmlLegacy(nodes) {
+function renderFieldSectionsHtmlLegacy(nodes, labels) {
   const sections = buildFieldSections(nodes);
   if (sections.length === 0) return "";
   return `<div class="field-preview">
@@ -63,7 +63,7 @@ ${section.entries
     (entry) => `<div class="field-row">
 <span class="field-key">${escapeHtml(entry.key)}</span>
 <span class="field-value">${escapeHtml(
-      entry.value || LABELS.emptyValue
+      entry.value || labels.emptyValue
     )}</span>
 </div>`
   )
@@ -74,7 +74,8 @@ ${section.entries
 </div>`;
 }
 
-export function createReportHtml(results, generatedAt, theme) {
+export function createReportHtml(results, generatedAt, theme, lang) {
+  const { labels, report } = getCopy(lang);
   const themeVars = {
     editorial: {
       bg: "#fdfcf9",
@@ -101,15 +102,17 @@ export function createReportHtml(results, generatedAt, theme) {
 
   const rows = results
     .map((r) => {
-      const types = Object.keys(r.typeCounts || {}).join(", ") || LABELS.empty;
-      const warnings = (r.errors || []).join(" | ") || LABELS.ok;
-      const fieldsHtml = renderFieldSectionsHtml(r) || renderFieldSectionsHtmlLegacy(r.nodes);
+      const types = Object.keys(r.typeCounts || {}).join(", ") || labels.empty;
+      const warnings = (r.errors || []).join(" | ") || labels.ok;
+      const fieldsHtml =
+        renderFieldSectionsHtml(r, labels) ||
+        renderFieldSectionsHtmlLegacy(r.nodes, labels);
       return `
         <tr>
-          <td>${escapeHtml(r.title || LABELS.noTitle)}</td>
+          <td>${escapeHtml(r.title || labels.noTitle)}</td>
           <td><a href="${escapeHtml(r.url)}">${escapeHtml(r.url)}</a></td>
           <td>${escapeHtml(types)}</td>
-          <td>${fieldsHtml || escapeHtml(LABELS.empty)}</td>
+          <td>${fieldsHtml || escapeHtml(labels.empty)}</td>
           <td>${escapeHtml(warnings)}</td>
         </tr>`;
     })
@@ -119,7 +122,7 @@ export function createReportHtml(results, generatedAt, theme) {
 <html>
 <head>
 <meta charset="utf-8" />
-<title>構造化データ レポート</title>
+<title>${escapeHtml(report.title)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -146,16 +149,16 @@ export function createReportHtml(results, generatedAt, theme) {
 </style>
 </head>
 <body>
-<h1>構造化データ レポート</h1>
-<div class="meta">生成日時: ${escapeHtml(generatedAt)}</div>
+<h1>${escapeHtml(report.title)}</h1>
+<div class="meta">${escapeHtml(report.generatedAt)}: ${escapeHtml(generatedAt)}</div>
 <table>
   <thead>
     <tr>
-      <th>タイトル</th>
-      <th>URL</th>
-      <th>タイプ</th>
-      <th>項目一覧</th>
-      <th>警告</th>
+      <th>${escapeHtml(report.tableHeaders[0])}</th>
+      <th>${escapeHtml(report.tableHeaders[1])}</th>
+      <th>${escapeHtml(report.tableHeaders[2])}</th>
+      <th>${escapeHtml(report.tableHeaders[3])}</th>
+      <th>${escapeHtml(report.tableHeaders[4])}</th>
     </tr>
   </thead>
   <tbody>

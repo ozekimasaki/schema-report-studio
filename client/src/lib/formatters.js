@@ -1,4 +1,4 @@
-import { LABELS } from "./constants.js";
+import { getCopy } from "./i18n.js";
 
 export function parseUrls(input) {
   return input
@@ -15,6 +15,11 @@ export function summarizeResults(results) {
   const withRdfa = results.filter((r) => r.rdfa?.length).length;
   const errors = results.filter((r) => r.errors?.length).length;
   return { total, ok, withJsonLd, withMicrodata, withRdfa, errors };
+}
+
+function getLabels(labels) {
+  if (labels) return labels;
+  return getCopy("ja").labels;
 }
 
 export function formatNodeType(node) {
@@ -61,9 +66,10 @@ export function buildFieldSections(nodes) {
   });
 }
 
-export function summarizeFieldKeys(nodes, maxKeys = 4) {
+export function summarizeFieldKeys(nodes, maxKeys = 4, labels) {
+  const copyLabels = getLabels(labels);
   const sections = buildFieldSections(nodes);
-  if (sections.length === 0) return LABELS.empty;
+  if (sections.length === 0) return copyLabels.empty;
   const keys = [];
   for (const section of sections) {
     for (const entry of section.entries) {
@@ -72,37 +78,45 @@ export function summarizeFieldKeys(nodes, maxKeys = 4) {
     }
     if (keys.length >= maxKeys) break;
   }
-  if (keys.length === 0) return LABELS.empty;
-  return keys.length >= maxKeys ? `${keys.join(", ")} ほか` : keys.join(", ");
+  if (keys.length === 0) return copyLabels.empty;
+  return keys.length >= maxKeys
+    ? `${keys.join(", ")} ${copyLabels.moreSuffix}`
+    : keys.join(", ");
 }
 
-export function formatFieldsText(nodes) {
+export function formatFieldsText(nodes, labels) {
+  const copyLabels = getLabels(labels);
   const sections = buildFieldSections(nodes);
   if (sections.length === 0) return "";
   return sections
     .map((section) => {
       const lines = section.entries.map(
-        (entry) => `${entry.key}: ${entry.value || LABELS.emptyValue}`
+        (entry) => `${entry.key}: ${entry.value || copyLabels.emptyValue}`
       );
-      return `${section.title}\n${lines.join("\n")}`;
+      return `${section.title}
+${lines.join("
+")}`;
     })
-    .join("\n\n");
+    .join("
+
+");
 }
 
-function formatDisplayValue(value) {
+function formatDisplayValue(value, labels) {
+  const copyLabels = getLabels(labels);
   if (Array.isArray(value)) {
-    return value.map((item) => formatDisplayValue(item)).join(" / ");
+    return value.map((item) => formatDisplayValue(item, labels)).join(" / ");
   }
   if (value && typeof value === "object") {
     return JSON.stringify(value, null, 2);
   }
   if (value === null || value === undefined || value === "") {
-    return LABELS.emptyValue;
+    return copyLabels.emptyValue;
   }
   return String(value);
 }
 
-export function buildMicrodataSections(items) {
+export function buildMicrodataSections(items, labels) {
   if (!Array.isArray(items) || items.length === 0) return [];
   return items.map((item, index) => {
     const types = item.itemtype?.length
@@ -111,7 +125,7 @@ export function buildMicrodataSections(items) {
     const title = `#${index + 1} ${types}`;
     const entries = Object.entries(item.properties || {}).map(([key, value]) => ({
       key,
-      value: formatDisplayValue(value),
+      value: formatDisplayValue(value, labels),
     }));
     if (item.itemid) {
       entries.unshift({ key: "itemid", value: item.itemid });
@@ -120,7 +134,7 @@ export function buildMicrodataSections(items) {
   });
 }
 
-export function buildRdfaSections(items) {
+export function buildRdfaSections(items, labels) {
   if (!Array.isArray(items) || items.length === 0) return [];
   return items.map((item, index) => {
     const types = item.typeof?.length ? item.typeof.join(", ") : "RDFa";
@@ -130,15 +144,16 @@ export function buildRdfaSections(items) {
     if (item.vocab) entries.push({ key: "vocab", value: item.vocab });
     if (item.prefix) entries.push({ key: "prefix", value: item.prefix });
     for (const [key, value] of Object.entries(item.properties || {})) {
-      entries.push({ key, value: formatDisplayValue(value) });
+      entries.push({ key, value: formatDisplayValue(value, labels) });
     }
     return { title, entries };
   });
 }
 
-export function summarizeMicrodataKeys(items, maxKeys = 4) {
-  const sections = buildMicrodataSections(items);
-  if (sections.length === 0) return LABELS.empty;
+export function summarizeMicrodataKeys(items, maxKeys = 4, labels) {
+  const copyLabels = getLabels(labels);
+  const sections = buildMicrodataSections(items, labels);
+  if (sections.length === 0) return copyLabels.empty;
   const keys = [];
   for (const section of sections) {
     for (const entry of section.entries) {
@@ -147,13 +162,16 @@ export function summarizeMicrodataKeys(items, maxKeys = 4) {
     }
     if (keys.length >= maxKeys) break;
   }
-  if (keys.length === 0) return LABELS.empty;
-  return keys.length >= maxKeys ? `${keys.join(", ")} ほか` : keys.join(", ");
+  if (keys.length === 0) return copyLabels.empty;
+  return keys.length >= maxKeys
+    ? `${keys.join(", ")} ${copyLabels.moreSuffix}`
+    : keys.join(", ");
 }
 
-export function summarizeRdfaKeys(items, maxKeys = 4) {
-  const sections = buildRdfaSections(items);
-  if (sections.length === 0) return LABELS.empty;
+export function summarizeRdfaKeys(items, maxKeys = 4, labels) {
+  const copyLabels = getLabels(labels);
+  const sections = buildRdfaSections(items, labels);
+  if (sections.length === 0) return copyLabels.empty;
   const keys = [];
   for (const section of sections) {
     for (const entry of section.entries) {
@@ -162,6 +180,8 @@ export function summarizeRdfaKeys(items, maxKeys = 4) {
     }
     if (keys.length >= maxKeys) break;
   }
-  if (keys.length === 0) return LABELS.empty;
-  return keys.length >= maxKeys ? `${keys.join(", ")} ほか` : keys.join(", ");
+  if (keys.length === 0) return copyLabels.empty;
+  return keys.length >= maxKeys
+    ? `${keys.join(", ")} ${copyLabels.moreSuffix}`
+    : keys.join(", ");
 }

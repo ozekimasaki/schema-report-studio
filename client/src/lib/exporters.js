@@ -1,47 +1,38 @@
-import { LABELS } from "./constants.js";
+import { getCopy } from "./i18n.js";
 import {
   buildMicrodataSections,
   buildRdfaSections,
   formatFieldsText,
 } from "./formatters.js";
 
-function formatSectionsText(sections) {
+function formatSectionsText(sections, labels) {
   if (!sections.length) return "";
   return sections
     .map((section) => {
       const lines = section.entries.map(
-        (entry) => `${entry.key}: ${entry.value || LABELS.emptyValue}`
+        (entry) => `${entry.key}: ${entry.value || labels.emptyValue}`
       );
       return `${section.title}\n${lines.join("\n")}`;
     })
     .join("\n\n");
 }
 
-export function createCsv(results) {
-  const headers = [
-    "タイトル",
-    "URL",
-    "タイプ",
-    "項目一覧",
-    "Microdata",
-    "RDFa",
-    "警告",
-    "ステータス",
-    "処理時間(ms)",
-  ];
+export function createCsv(results, lang) {
+  const { labels, csv } = getCopy(lang);
+  const headers = csv.headers;
   const lines = [headers];
   for (const row of results) {
     const types = Object.keys(row.typeCounts || {}).join(", ");
-    const warnings = row.errors?.length ? row.errors.join(" | ") : LABELS.ok;
+    const warnings = row.errors?.length ? row.errors.join(" | ") : labels.ok;
     lines.push([
       row.title || "",
       row.url || "",
       types,
-      formatFieldsText(row.nodes),
-      formatSectionsText(buildMicrodataSections(row.microdata)),
-      formatSectionsText(buildRdfaSections(row.rdfa)),
+      formatFieldsText(row.nodes, labels),
+      formatSectionsText(buildMicrodataSections(row.microdata, labels), labels),
+      formatSectionsText(buildRdfaSections(row.rdfa, labels), labels),
       warnings,
-      row.ok ? "OK" : LABELS.statusError,
+      row.ok ? csv.statusOk : labels.statusError,
       String(row.timeMs || 0),
     ]);
   }

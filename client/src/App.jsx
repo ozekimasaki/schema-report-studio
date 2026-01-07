@@ -3,7 +3,8 @@ import Hero from "./components/Hero.jsx";
 import UrlInputPanel from "./components/UrlInputPanel.jsx";
 import ReportPanel from "./components/ReportPanel.jsx";
 import Footer from "./components/Footer.jsx";
-import { EXAMPLE_URLS, THEME_OPTIONS, LIMITS } from "./lib/constants.js";
+import { EXAMPLE_URLS, LIMITS } from "./lib/constants.js";
+import { getCopy, getThemeOptions, LANG_OPTIONS } from "./lib/i18n.js";
 import { parseUrls, summarizeResults } from "./lib/formatters.js";
 import { createReportHtml } from "./lib/report.js";
 import { extractStructuredData } from "./lib/api.js";
@@ -17,22 +18,29 @@ export default function App() {
   const [error, setError] = useState("");
   const [theme, setTheme] = useState("editorial");
   const [expandedRows, setExpandedRows] = useState({});
+  const [language, setLanguage] = useState("ja");
 
   const stats = useMemo(() => summarizeResults(results), [results]);
+  const copy = useMemo(() => getCopy(language), [language]);
+  const themeOptions = useMemo(() => getThemeOptions(language), [language]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
 
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
+
   async function handleExtract() {
     setError("");
     const urls = parseUrls(input);
     if (urls.length === 0) {
-      setError("URLを1件以上入力してください。");
+      setError(copy.errors.noUrl);
       return;
     }
     if (urls.length > LIMITS.maxUrls) {
-      setError(`URLは最大${LIMITS.maxUrls}件までです。`);
+      setError(copy.errors.limit.replace("{count}", LIMITS.maxUrls));
       return;
     }
 
@@ -43,7 +51,7 @@ export default function App() {
       setGeneratedAt(data.generatedAt || new Date().toISOString());
       setExpandedRows({});
     } catch (err) {
-      setError(err?.message || "構造化データの抽出に失敗しました。");
+      setError(err?.message || copy.errors.extractFail);
     } finally {
       setLoading(false);
     }
@@ -73,7 +81,8 @@ export default function App() {
     const html = createReportHtml(
       results,
       generatedAt || new Date().toISOString(),
-      theme
+      theme,
+      language
     );
     downloadBlob("structured-data-report.html", html, "text/html");
   }
@@ -82,11 +91,12 @@ export default function App() {
     const html = createReportHtml(
       results,
       generatedAt || new Date().toISOString(),
-      theme
+      theme,
+      language
     );
     const popup = window.open("", "_blank");
     if (!popup) {
-      setError("ポップアップがブロックされました。許可して再試行してください。");
+      setError(copy.errors.popupBlocked);
       return;
     }
     popup.document.open();
@@ -97,7 +107,11 @@ export default function App() {
   }
 
   function handleDownloadCsv() {
-    downloadBlob("structured-data-report.csv", createCsv(results), "text/csv");
+    downloadBlob(
+      "structured-data-report.csv",
+      createCsv(results, language),
+      "text/csv"
+    );
   }
 
   function handleToggleRow(rowKey) {
@@ -106,7 +120,19 @@ export default function App() {
 
   return (
     <div className="page">
-      <Hero input={input} stats={stats} />
+      <div className="page-top">
+        <label className="select">
+          <span>{copy.languageLabel}</span>
+          <select value={language} onChange={(e) => setLanguage(e.target.value)}>
+            {LANG_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <Hero input={input} stats={stats} copy={copy} />
       <UrlInputPanel
         input={input}
         loading={loading}
@@ -115,9 +141,10 @@ export default function App() {
         onUseExample={handleUseExample}
         onClear={handleClear}
         onExtract={handleExtract}
+        copy={copy}
       />
       <ReportPanel
-        themeOptions={THEME_OPTIONS}
+        themeOptions={themeOptions}
         theme={theme}
         onThemeChange={setTheme}
         onDownloadJson={handleDownloadJson}
@@ -128,8 +155,10 @@ export default function App() {
         results={results}
         expandedRows={expandedRows}
         onToggleRow={handleToggleRow}
+        copy={copy}
+        labels={copy.labels}
       />
-      <Footer />
+      <Footer copy={copy} githubUrl="https://github.com/ozekimasaki" />
     </div>
   );
 }

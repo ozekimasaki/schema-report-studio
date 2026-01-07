@@ -1,5 +1,4 @@
 import { Fragment, useState } from "react";
-import { LABELS } from "../lib/constants.js";
 import {
   buildFieldSections,
   buildMicrodataSections,
@@ -9,21 +8,21 @@ import {
   summarizeRdfaKeys,
 } from "../lib/formatters.js";
 
-function FieldPreview({ jsonLd, microdata, rdfa }) {
+function FieldPreview({ jsonLd, microdata, rdfa, copy, labels }) {
   const jsonLdCount = Array.isArray(jsonLd) ? jsonLd.length : 0;
   const microdataCount = Array.isArray(microdata) ? microdata.length : 0;
   const rdfaCount = Array.isArray(rdfa) ? rdfa.length : 0;
   const hasAny = jsonLdCount + microdataCount + rdfaCount > 0;
-  if (!hasAny) return <span>{LABELS.empty}</span>;
+  if (!hasAny) return <span>{labels.empty}</span>;
   const meta = [];
   if (jsonLdCount) {
-    meta.push(`JSON-LD: ${summarizeFieldKeys(jsonLd)}`);
+    meta.push(`JSON-LD: ${summarizeFieldKeys(jsonLd, 4, labels)}`);
   }
   if (microdataCount) {
-    meta.push(`Microdata: ${summarizeMicrodataKeys(microdata)}`);
+    meta.push(`Microdata: ${summarizeMicrodataKeys(microdata, 4, labels)}`);
   }
   if (rdfaCount) {
-    meta.push(`RDFa: ${summarizeRdfaKeys(rdfa)}`);
+    meta.push(`RDFa: ${summarizeRdfaKeys(rdfa, 4, labels)}`);
   }
   return (
     <div className="field-preview">
@@ -35,13 +34,13 @@ function FieldPreview({ jsonLd, microdata, rdfa }) {
           <span key={item}>{item}</span>
         ))}
       </div>
-      <span className="field-preview-hint">行クリックで詳細</span>
+      <span className="field-preview-hint">{copy.table.rowHint}</span>
     </div>
   );
 }
 
-function SectionList({ sections }) {
-  if (sections.length === 0) return <div>{LABELS.empty}</div>;
+function SectionList({ sections, labels }) {
+  if (sections.length === 0) return <div>{labels.empty}</div>;
   return (
     <div className="field-details">
       {sections.map((section, sectionIndex) => (
@@ -49,7 +48,7 @@ function SectionList({ sections }) {
           <div className="field-title">{section.title}</div>
           {section.entries.length === 0 ? (
             <div className="field-row">
-              <span className="field-key">{LABELS.emptyValue}</span>
+              <span className="field-key">{labels.emptyValue}</span>
               <span className="field-value"></span>
             </div>
           ) : (
@@ -57,7 +56,7 @@ function SectionList({ sections }) {
               <div key={entryIndex} className="field-row">
                 <span className="field-key">{entry.key}</span>
                 <span className="field-value">
-                  {entry.value || LABELS.emptyValue}
+                  {entry.value || labels.emptyValue}
                 </span>
               </div>
             ))
@@ -68,7 +67,13 @@ function SectionList({ sections }) {
   );
 }
 
-export default function ResultsTable({ results, expandedRows, onToggleRow }) {
+export default function ResultsTable({
+  results,
+  expandedRows,
+  onToggleRow,
+  copy,
+  labels,
+}) {
   const [tabByRow, setTabByRow] = useState({});
 
   function setActiveTab(rowKey, tab) {
@@ -80,20 +85,20 @@ export default function ResultsTable({ results, expandedRows, onToggleRow }) {
       <table>
         <thead>
           <tr>
-            <th>タイトル</th>
-            <th>URL</th>
-            <th>タイプ</th>
-            <th>項目一覧</th>
-            <th>警告</th>
+            <th>{copy.table.title}</th>
+            <th>{copy.table.url}</th>
+            <th>{copy.table.type}</th>
+            <th>{copy.table.fields}</th>
+            <th>{copy.table.warnings}</th>
           </tr>
         </thead>
         <tbody>
           {results.map((row, index) => {
             const types =
-              Object.keys(row.typeCounts || {}).join(", ") || LABELS.empty;
+              Object.keys(row.typeCounts || {}).join(", ") || labels.empty;
             const warnings = row.errors?.length
               ? row.errors.join(" | ")
-              : LABELS.ok;
+              : labels.ok;
             const rowKey = `${row.url}-${index}`;
             const isExpanded = Boolean(expandedRows[rowKey]);
             const activeTab = tabByRow[rowKey] || "jsonld";
@@ -103,8 +108,10 @@ export default function ResultsTable({ results, expandedRows, onToggleRow }) {
                   className={`data-row ${isExpanded ? "expanded" : ""}`}
                   onClick={() => onToggleRow(rowKey)}
                 >
-                  <td data-label="タイトル">{row.title || LABELS.noTitle}</td>
-                  <td data-label="URL">
+                  <td data-label={copy.table.title}>
+                    {row.title || labels.noTitle}
+                  </td>
+                  <td data-label={copy.table.url}>
                     <a
                       href={row.url}
                       target="_blank"
@@ -114,22 +121,24 @@ export default function ResultsTable({ results, expandedRows, onToggleRow }) {
                       {row.url}
                     </a>
                   </td>
-                  <td data-label="タイプ">{types}</td>
-                  <td data-label="項目一覧">
+                  <td data-label={copy.table.type}>{types}</td>
+                  <td data-label={copy.table.fields}>
                     <FieldPreview
                       jsonLd={row.nodes}
                       microdata={row.microdata}
                       rdfa={row.rdfa}
+                      copy={copy}
+                      labels={labels}
                     />
                   </td>
-                  <td data-label="警告">
+                  <td data-label={copy.table.warnings}>
                     <span
-                      className={warnings === LABELS.ok ? "chip ok" : "chip warn"}
+                      className={warnings === labels.ok ? "chip ok" : "chip warn"}
                     >
                       {warnings}
                     </span>
                     <span className="toggle-detail">
-                      {isExpanded ? "詳細を閉じる" : "詳細を見る"}
+                      {isExpanded ? copy.table.detailClose : copy.table.detailOpen}
                     </span>
                   </td>
                 </tr>
@@ -161,29 +170,38 @@ export default function ResultsTable({ results, expandedRows, onToggleRow }) {
                           </button>
                         </div>
                         {activeTab === "jsonld" ? (
-                          <SectionList sections={buildFieldSections(row.nodes)} />
+                          <SectionList
+                            sections={buildFieldSections(row.nodes)}
+                            labels={labels}
+                          />
                         ) : null}
                         {activeTab === "microdata" ? (
-                          <SectionList sections={buildMicrodataSections(row.microdata)} />
+                          <SectionList
+                            sections={buildMicrodataSections(row.microdata, labels)}
+                            labels={labels}
+                          />
                         ) : null}
                         {activeTab === "rdfa" ? (
-                          <SectionList sections={buildRdfaSections(row.rdfa)} />
+                          <SectionList
+                            sections={buildRdfaSections(row.rdfa, labels)}
+                            labels={labels}
+                          />
                         ) : null}
                         {activeTab === "jsonld" && row.nodes?.length ? (
                           <details className="raw-details">
-                            <summary>JSON-LD生データ</summary>
+                            <summary>{copy.table.rawJsonLd}</summary>
                             <pre>{JSON.stringify(row.nodes, null, 2)}</pre>
                           </details>
                         ) : null}
                         {activeTab === "microdata" && row.microdata?.length ? (
                           <details className="raw-details">
-                            <summary>Microdata生データ</summary>
+                            <summary>{copy.table.rawMicrodata}</summary>
                             <pre>{JSON.stringify(row.microdata, null, 2)}</pre>
                           </details>
                         ) : null}
                         {activeTab === "rdfa" && row.rdfa?.length ? (
                           <details className="raw-details">
-                            <summary>RDFa生データ</summary>
+                            <summary>{copy.table.rawRdfa}</summary>
                             <pre>{JSON.stringify(row.rdfa, null, 2)}</pre>
                           </details>
                         ) : null}
