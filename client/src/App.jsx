@@ -11,6 +11,13 @@ import { extractStructuredData } from "./lib/api.js";
 import { createCsv, downloadBlob } from "./lib/exporters.js";
 
 export default function App() {
+  const storedLanguage =
+    typeof window !== "undefined" ? window.localStorage.getItem("lang") : null;
+  const initialLanguage = LANG_OPTIONS.some(
+    (option) => option.value === storedLanguage
+  )
+    ? storedLanguage
+    : "ja";
   const [input, setInput] = useState("");
   const [results, setResults] = useState([]);
   const [generatedAt, setGeneratedAt] = useState("");
@@ -18,7 +25,7 @@ export default function App() {
   const [error, setError] = useState("");
   const [theme, setTheme] = useState("editorial");
   const [expandedRows, setExpandedRows] = useState({});
-  const [language, setLanguage] = useState("ja");
+  const [language, setLanguage] = useState(initialLanguage);
 
   const stats = useMemo(() => summarizeResults(results), [results]);
   const copy = useMemo(() => getCopy(language), [language]);
@@ -30,6 +37,10 @@ export default function App() {
 
   useEffect(() => {
     document.documentElement.lang = language;
+  }, [language]);
+
+  useEffect(() => {
+    window.localStorage.setItem("lang", language);
   }, [language]);
 
   async function handleExtract() {
