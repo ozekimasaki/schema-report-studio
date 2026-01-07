@@ -1,10 +1,11 @@
-# Structured Data Report Studio
+# Schema Report Studio
 
 Batch extract JSON-LD from URLs and export a client-ready report (HTML or PDF via print).
 
 ## Stack
 - Client: Vite 7 + React
 - Server: Hono (Node)
+- Worker: Cloudflare Workers (static assets + API)
 
 ## Setup
 
@@ -27,7 +28,7 @@ npm run dev
 Client runs on http://localhost:5173
 Server runs on http://localhost:8787
 
-## Cloudflare Workers (front + API)
+## Cloudflare Workers (static + API)
 1. Build the client:
 ```
 cd client
@@ -44,6 +45,11 @@ wrangler dev
 ```
 wrangler deploy
 ```
+
+## Worker config
+- Config file: `server/wrangler.jsonc`
+- Worker entry: `server/src/worker.js`
+- Assets directory: `client/dist`
 
 ## Usage
 1. Paste URLs (one per line).
