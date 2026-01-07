@@ -11,14 +11,28 @@ export function summarizeResults(results) {
   const total = results.length;
   const ok = results.filter((r) => r.ok).length;
   const withJsonLd = results.filter((r) => r.nodes?.length).length;
+  const withMicrodata = results.filter((r) => r.microdata?.length).length;
+  const withRdfa = results.filter((r) => r.rdfa?.length).length;
   const errors = results.filter((r) => r.errors?.length).length;
-  return { total, ok, withJsonLd, errors };
+  return { total, ok, withJsonLd, withMicrodata, withRdfa, errors };
 }
 
 export function formatNodeType(node) {
   const t = node?.["@type"];
   if (!t) return "Item";
   return Array.isArray(t) ? t.join(", ") : t;
+}
+
+function formatTypeLabel(value) {
+  if (!value) return "";
+  const raw = String(value);
+  const hashIndex = raw.lastIndexOf("#");
+  const slashIndex = raw.lastIndexOf("/");
+  const cutIndex = Math.max(hashIndex, slashIndex);
+  if (cutIndex >= 0 && cutIndex < raw.length - 1) {
+    return raw.slice(cutIndex + 1);
+  }
+  return raw;
 }
 
 export function formatFieldValue(value) {
@@ -91,7 +105,9 @@ function formatDisplayValue(value) {
 export function buildMicrodataSections(items) {
   if (!Array.isArray(items) || items.length === 0) return [];
   return items.map((item, index) => {
-    const types = item.itemtype?.length ? item.itemtype.join(", ") : "Microdata";
+    const types = item.itemtype?.length
+      ? item.itemtype.map(formatTypeLabel).join(", ")
+      : "Microdata";
     const title = `#${index + 1} ${types}`;
     const entries = Object.entries(item.properties || {}).map(([key, value]) => ({
       key,

@@ -72,13 +72,26 @@ function addTypeCounts(typeCounts, types) {
   }
 }
 
+function normalizeTypeLabel(value) {
+  if (!value) return value;
+  const raw = String(value);
+  const hashIndex = raw.lastIndexOf("#");
+  const slashIndex = raw.lastIndexOf("/");
+  const cutIndex = Math.max(hashIndex, slashIndex);
+  if (cutIndex >= 0 && cutIndex < raw.length - 1) {
+    return raw.slice(cutIndex + 1);
+  }
+  return raw;
+}
+
 function summarizeAll(nodes, microdata, rdfa) {
   const typeCounts = {};
   for (const node of nodes) {
     addTypeCounts(typeCounts, typeList(node));
   }
   for (const item of microdata) {
-    addTypeCounts(typeCounts, Array.isArray(item.itemtype) ? item.itemtype : []);
+    const types = Array.isArray(item.itemtype) ? item.itemtype : [];
+    addTypeCounts(typeCounts, types.map(normalizeTypeLabel));
   }
   for (const item of rdfa) {
     addTypeCounts(typeCounts, Array.isArray(item.typeof) ? item.typeof : []);
