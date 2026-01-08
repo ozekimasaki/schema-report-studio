@@ -114,7 +114,20 @@ export default function App() {
     popup.document.write(html);
     popup.document.close();
     popup.focus();
-    setTimeout(() => popup.print(), 400);
+    const waitForReady = new Promise((resolve) => {
+      const timeoutId = popup.setTimeout(() => resolve(), 2000);
+      const intervalId = popup.setInterval(() => {
+        if (popup.document.readyState === "complete") {
+          popup.clearTimeout(timeoutId);
+          popup.clearInterval(intervalId);
+          resolve();
+        }
+      }, 50);
+    });
+    const waitForFonts = popup.document.fonts
+      ? popup.document.fonts.ready.catch(() => {})
+      : Promise.resolve();
+    Promise.all([waitForReady, waitForFonts]).then(() => popup.print());
   }
 
   function handleDownloadCsv() {

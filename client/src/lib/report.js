@@ -76,6 +76,7 @@ ${section.entries
 
 export function createReportHtml(results, generatedAt, theme, lang) {
   const { labels, report } = getCopy(lang);
+  const headers = report.tableHeaders || [];
   const themeVars = {
     editorial: {
       bg: "#fdfcf9",
@@ -109,11 +110,19 @@ export function createReportHtml(results, generatedAt, theme, lang) {
         renderFieldSectionsHtmlLegacy(r.nodes, labels);
       return `
         <tr>
-          <td>${escapeHtml(r.title || labels.noTitle)}</td>
-          <td><a href="${escapeHtml(r.url)}">${escapeHtml(r.url)}</a></td>
-          <td>${escapeHtml(types)}</td>
-          <td>${fieldsHtml || escapeHtml(labels.empty)}</td>
-          <td>${escapeHtml(warnings)}</td>
+          <td data-label="${escapeHtml(headers[0] || "")}">${escapeHtml(
+            r.title || labels.noTitle
+          )}</td>
+          <td data-label="${escapeHtml(headers[1] || "")}"><a href="${escapeHtml(
+            r.url
+          )}">${escapeHtml(r.url)}</a></td>
+          <td data-label="${escapeHtml(headers[2] || "")}">${escapeHtml(types)}</td>
+          <td data-label="${escapeHtml(headers[3] || "")}">${
+            fieldsHtml || escapeHtml(labels.empty)
+          }</td>
+          <td data-label="${escapeHtml(headers[4] || "")}">${escapeHtml(
+            warnings
+          )}</td>
         </tr>`;
     })
     .join("\n");
@@ -128,12 +137,15 @@ export function createReportHtml(results, generatedAt, theme, lang) {
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root { --bg:${themeVars.bg}; --ink:${themeVars.ink}; --muted:${themeVars.muted}; --line:${themeVars.line}; --accent:${themeVars.accent}; }
-  body { font-family: "Noto Sans JP", "Public Sans", Arial, sans-serif; color: var(--ink); margin: 32px; background: var(--bg); }
+  body { font-family: "Noto Sans JP", "Public Sans", Arial, sans-serif; color: var(--ink); margin: 32px; background: var(--bg); line-height: 1.55; }
   h1 { font-family: "Noto Serif JP", "Libre Bodoni", Georgia, serif; margin-bottom: 6px; }
   .meta { color: var(--muted); margin-bottom: 20px; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; }
   th, td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
   th { text-align: left; background: #faf7f0; }
+  thead { display: table-header-group; }
+  tbody tr { break-inside: avoid; }
+  tbody tr:nth-child(even) { background: rgba(0, 0, 0, 0.02); }
   .field-preview { display: grid; gap: 6px; }
   .field-section { border: 1px dashed var(--line); border-radius: 10px; padding: 8px; background: #fff; }
   .field-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
@@ -145,7 +157,18 @@ export function createReportHtml(results, generatedAt, theme, lang) {
   .field-block { margin-bottom: 12px; }
   .field-block-title { font-size: 12px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
   a { color: var(--accent); text-decoration: none; }
-  @media print { body { margin: 10mm; } }
+  @media print {
+    @page { size: A4 landscape; margin: 12mm; }
+    body { margin: 12mm; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    a { color: var(--ink); text-decoration: underline; }
+    table, thead, tbody, tr, th, td { display: block; width: 100%; }
+    thead { display: none; }
+    tr { border: 1px solid var(--line); border-radius: 10px; margin-bottom: 12px; padding: 6px 0; background: #fff; }
+    td { border-bottom: 1px solid var(--line); padding: 8px 12px; }
+    td:last-child { border-bottom: none; }
+    td::before { content: attr(data-label); display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 4px; font-weight: 600; }
+    .field-row { grid-template-columns: 120px 1fr; }
+  }
 </style>
 </head>
 <body>
